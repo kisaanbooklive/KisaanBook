@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="description" content="KisaanBook — Smart Offline Crop Budget & Lifecycle Manager"/>
+  <meta name="theme-color" content="#1A3C2A"/>
+  <title>KisaanBook 🌾</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet"/>
+  <!-- SheetJS for XLSX export (CDN, cached by browser) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SIDEBAR / SIDE NAV (Desktop)
+══════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🌾</div>
+    <div>
+      <div class="sidebar-logo-name">KisaanBook</div>
+      <div class="sidebar-logo-tagline">Farm Intelligence</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="snav-btn active" data-page="dashboard">
+      <span class="snav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </span>
+      <span class="snav-label">Dashboard</span>
+    </button>
+    <button class="snav-btn" data-page="add-crop">
+      <span class="snav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </span>
+      <span class="snav-label">Add Crop</span>
+    </button>
+    <button class="snav-btn" data-page="expenses">
+      <span class="snav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <span class="snav-label">Expenses</span>
+    </button>
+    <button class="snav-btn" data-page="export">
+      <span class="snav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </span>
+      <span class="snav-label">Export / Import</span>
+    </button>
+    <button class="snav-btn" data-page="about">
+      <span class="snav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </span>
+      <span class="snav-label">About</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-version">v2.0 · Offline Ready</div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════
+     TOP HEADER (Mobile)
+══════════════════════════════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🌾</span>
+      <span class="logo-text">KisaanBook</span>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════ -->
+<div class="app-layout">
+  <main class="app-main">
+
+    <!-- ▸ DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub" id="todayDate"></p>
+        </div>
+        <button class="btn-primary btn-sm" onclick="navigateTo('add-crop')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Crop
+        </button>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card kpi-green">
+          <div class="kpi-top">
+            <span class="kpi-label">Active Crops</span>
+            <span class="kpi-ico">🌱</span>
+          </div>
+          <div class="kpi-val" id="totalCrops">0</div>
+          <div class="kpi-foot" id="kpiCropFoot">Start by adding a crop</div>
+        </div>
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-top">
+            <span class="kpi-label">Total Invested</span>
+            <span class="kpi-ico">💰</span>
+          </div>
+          <div class="kpi-val" id="totalExpenses">₹0</div>
+          <div class="kpi-foot" id="kpiExpFoot">Across all crops</div>
+        </div>
+        <div class="kpi-card kpi-sky">
+          <div class="kpi-top">
+            <span class="kpi-label">This Month</span>
+            <span class="kpi-ico">📅</span>
+          </div>
+          <div class="kpi-val" id="thisMonthExpenses">₹0</div>
+          <div class="kpi-foot" id="kpiMonFoot">Monthly spending</div>
+        </div>
+        <div class="kpi-card kpi-rust">
+          <div class="kpi-top">
+            <span class="kpi-label">Near Harvest</span>
+            <span class="kpi-ico">🌾</span>
+          </div>
+          <div class="kpi-val" id="nearHarvest">0</div>
+          <div class="kpi-foot">Ready to harvest soon</div>
+        </div>
+      </div>
+
+      <!-- Crop Cards -->
+      <div class="section-row">
+        <h2 class="section-title">Your Crops</h2>
+        <button class="btn-text" onclick="navigateTo('add-crop')">+ New Crop</button>
+      </div>
+      <div class="crop-grid" id="dashboardCropList">
+        <div class="empty-block">
+          <div class="empty-ico">🌾</div>
+          <p>No crops yet. Tap <strong>Add Crop</strong> to begin!</p>
+        </div>
+      </div>
+
+      <!-- Recent Expenses -->
+      <div class="section-row" style="margin-top:8px;">
+        <h2 class="section-title">Recent Expenses</h2>
+        <button class="btn-text" onclick="navigateTo('expenses')">View All →</button>
+      </div>
+      <div class="exp-list" id="recentExpenseList">
+        <div class="empty-block small"><p>No expenses recorded yet.</p></div>
+      </div>
+    </section>
+
+    <!-- ▸ ADD CROP -->
+    <section class="page" id="page-add-crop">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Add Crop</h1>
+          <p class="page-sub">Register a new crop to start tracking</p>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-grid-2">
+          <div class="form-group full">
+            <label class="form-lbl">Crop Name *</label>
+            <input type="text" class="form-inp" id="cropName" placeholder="e.g. Wheat, Rice, Cotton…"/>
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Date of Sowing *</label>
+            <input type="date" class="form-inp" id="sowingDate"/>
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Harvest Duration (Days) *</label>
+            <input type="number" class="form-inp" id="harvestDays" placeholder="e.g. 90, 120…" min="1" max="365"/>
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Land Area</label>
+            <input type="text" class="form-inp" id="landArea" placeholder="e.g. 2 acres, 0.5 hectare…"/>
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Crop Variety</label>
+            <input type="text" class="form-inp" id="cropVariety" placeholder="e.g. HD-2967, IR-64…"/>
+          </div>
+          <div class="form-group full">
+            <label class="form-lbl">Notes (Optional)</label>
+            <textarea class="form-inp form-ta" id="cropNotes" placeholder="Soil type, irrigation source, any observations…"></textarea>
+          </div>
+        </div>
+        <button class="btn-primary btn-full" id="saveCropBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Crop
+        </button>
+      </div>
+    </section>
+
+    <!-- ▸ EXPENSES -->
+    <section class="page" id="page-expenses">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Expenses</h1>
+          <p class="page-sub">Record and track all farm spending</p>
+        </div>
+      </div>
+
+      <!-- Add Expense Collapsible -->
+      <div class="collapsible-card" id="expFormCard">
+        <div class="collapsible-hdr" id="expFormToggle">
+          <div class="collapsible-hdr-left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Expense
+          </div>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="collapsible-body" id="expFormBody">
+          <div class="form-grid-2" style="padding:20px 20px 0">
+            <div class="form-group">
+              <label class="form-lbl">Select Crop *</label>
+              <select class="form-inp" id="expenseCrop">
+                <option value="">— Choose Crop —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Date *</label>
+              <input type="date" class="form-inp" id="expenseDate"/>
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Amount (₹) *</label>
+              <input type="number" class="form-inp" id="expenseAmount" placeholder="Enter amount" min="1"/>
+            </div>
+            <div class="form-group">
+              <label class="form-lbl">Category *</label>
+              <select class="form-inp" id="expenseCategory">
+                <option value="Fertilizer">🌿 Fertilizer</option>
+                <option value="Labor">👷 Labor</option>
+                <option value="Irrigation">💧 Irrigation / Water</option>
+                <option value="Pesticide">🧪 Pesticide</option>
+                <option value="Seeds">🌱 Seeds</option>
+                <option value="Equipment">🚜 Equipment / Rental</option>
+                <option value="Transport">🚛 Transport</option>
+                <option value="Land Rent">🏡 Land Rent</option>
+                <option value="Other">📦 Other</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label class="form-lbl">Description (Optional)</label>
+              <input type="text" class="form-inp" id="expenseDesc" placeholder="e.g. Urea 50kg bag, daily wage…"/>
+            </div>
+          </div>
+          <div style="padding:16px 20px 20px;">
+            <button class="btn-primary btn-full" id="saveExpenseBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Expense
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <select class="form-inp filter-sel" id="filterCropExpense">
+          <option value="all">All Crops</option>
+        </select>
+        <select class="form-inp filter-sel" id="filterMonthExpense">
+          <option value="all">All Months</option>
+        </select>
+      </div>
+
+      <!-- Summary Strip -->
+      <div class="summary-strip" id="summaryStrip"></div>
+
+      <!-- Monthly Chart -->
+      <div class="chart-card" id="monthlyChartCard" style="display:none;">
+        <div class="chart-card-title">📊 Monthly Spending Trend</div>
+        <div class="bar-chart" id="monthlyBarChart"></div>
+      </div>
+
+      <!-- Expense List -->
+      <div class="exp-list" id="fullExpenseList">
+        <div class="empty-block">
+          <div class="empty-ico">💰</div>
+          <p>No expenses yet. Add your first expense above!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ▸ EXPORT / IMPORT -->
+    <section class="page" id="page-export">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Export / Import</h1>
+          <p class="page-sub">Backup your data or restore from a file</p>
+        </div>
+      </div>
+
+      <!-- Data Summary -->
+      <div class="export-summary-card" id="exportSummary"></div>
+
+      <!-- Export Section -->
+      <div class="export-section-block">
+        <div class="export-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Export Data
+        </div>
+        <p class="export-section-desc">Download your farm data for backup, sharing, or analysis in Excel / other tools.</p>
+
+        <div class="export-btn-grid">
+          <!-- JSON -->
+          <div class="export-format-card" onclick="exportJSON()">
+            <div class="export-fmt-icon json-icon">{ }</div>
+            <div class="export-fmt-info">
+              <div class="export-fmt-name">JSON Backup</div>
+              <div class="export-fmt-desc">Full app backup. Use to restore data back into KisaanBook.</div>
+            </div>
+            <button class="btn-export btn-json">Download .json</button>
+          </div>
+
+          <!-- XLSX - Crops -->
+          <div class="export-format-card" onclick="exportXLSX_Crops()">
+            <div class="export-fmt-icon xlsx-icon">XLS</div>
+            <div class="export-fmt-info">
+              <div class="export-fmt-name">Crops Sheet (.xlsx)</div>
+              <div class="export-fmt-desc">All crop records in Excel format. Open in Excel, LibreOffice, or Google Sheets.</div>
+            </div>
+            <button class="btn-export btn-xlsx">Download .xlsx</button>
+          </div>
+
+          <!-- XLSX - Expenses -->
+          <div class="export-format-card" onclick="exportXLSX_Expenses()">
+            <div class="export-fmt-icon xlsx-icon">XLS</div>
+            <div class="export-fmt-info">
+              <div class="export-fmt-name">Expenses Sheet (.xlsx)</div>
+              <div class="export-fmt-desc">All expense entries with crop name, date, category, amount in Excel format.</div>
+            </div>
+            <button class="btn-export btn-xlsx">Download .xlsx</button>
+          </div>
+
+          <!-- XLSX - Full Report -->
+          <div class="export-format-card highlight-card" onclick="exportXLSX_Full()">
+            <div class="export-fmt-icon xlsx-icon gold-icon">★</div>
+            <div class="export-fmt-info">
+              <div class="export-fmt-name">Full Farm Report (.xlsx) <span class="badge-new">Recommended</span></div>
+              <div class="export-fmt-desc">Multi-sheet Excel workbook: Crops, Expenses, Monthly Summary, Category Breakdown — all in one file.</div>
+            </div>
+            <button class="btn-export btn-xlsx-full">Download Full Report</button>
+          </div>
+
+          <!-- CSV -->
+          <div class="export-format-card" onclick="exportCSV()">
+            <div class="export-fmt-icon csv-icon">CSV</div>
+            <div class="export-fmt-info">
+              <div class="export-fmt-name">CSV (Expenses)</div>
+              <div class="export-fmt-desc">Plain text comma-separated file. Compatible with any spreadsheet tool or database.</div>
+            </div>
+            <button class="btn-export btn-csv">Download .csv</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Section -->
+      <div class="export-section-block">
+        <div class="export-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Import / Restore
+        </div>
+        <p class="export-section-desc">Restore a previously exported KisaanBook JSON backup file. This will replace all current data.</p>
+        <div class="import-drop-zone" id="importDropZone" onclick="document.getElementById('importFile').click()">
+          <div class="drop-icon">📂</div>
+          <div class="drop-text">Click to select backup file</div>
+          <div class="drop-sub">Accepts: .json (KisaanBook backup)</div>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none"/>
+      </div>
+    </section>
+
+    <!-- ▸ CROP DETAILS -->
+    <section class="page" id="page-crop-details">
+      <div class="page-head">
+        <button class="btn-back" onclick="navigateTo('dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <h1 class="page-title" id="detailCropName">Crop Details</h1>
+      </div>
+      <div id="cropDetailContent"></div>
+    </section>
+
+    <!-- ▸ ABOUT -->
+    <section class="page" id="page-about">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">About</h1>
+          <p class="page-sub">KisaanBook — Farm Intelligence App</p>
+        </div>
+      </div>
+
+      <div class="about-hero">
+        <div class="about-app-icon">🌾</div>
+        <div class="about-app-name">KisaanBook</div>
+        <div class="about-app-tagline">Smart Farm Budget & Crop Lifecycle Manager</div>
+        <div class="about-version-badge">Version 2.0 · Offline-First</div>
+      </div>
+
+      <div class="about-dev-card">
+        <div class="about-dev-avatar">TH</div>
+        <div class="about-dev-info">
+          <div class="about-dev-name">Tukaram Hankare</div>
+          <div class="about-dev-roles">
+            <span class="dev-role-badge role-farmer">👨‍🌾 Farmer</span>
+            <span class="dev-role-badge role-coder">💻 Coder</span>
+            <span class="dev-role-badge role-web">🌐 Web Developer</span>
+          </div>
+          <p class="about-dev-bio">
+            Built KisaanBook from the ground up — combining hands-on farming knowledge with modern web development skills to create a practical tool that real farmers can use every day, even without internet.
+          </p>
+        </div>
+      </div>
+
+      <div class="about-feature-grid">
+        <div class="about-feat">
+          <span class="about-feat-ico">📴</span>
+          <div class="about-feat-title">100% Offline</div>
+          <div class="about-feat-desc">Works without internet. All data stored on your device using localStorage.</div>
+        </div>
+        <div class="about-feat">
+          <span class="about-feat-ico">🔒</span>
+          <div class="about-feat-title">Private & Secure</div>
+          <div class="about-feat-desc">No login, no cloud, no server. Your farm data stays only on your device.</div>
+        </div>
+        <div class="about-feat">
+          <span class="about-feat-ico">📊</span>
+          <div class="about-feat-title">Smart Tracking</div>
+          <div class="about-feat-desc">Automated crop stage detection with intelligent care suggestions per growth phase.</div>
+        </div>
+        <div class="about-feat">
+          <span class="about-feat-ico">📤</span>
+          <div class="about-feat-title">Excel Export</div>
+          <div class="about-feat-desc">Export all data as .xlsx, .csv, or .json for record keeping and analysis.</div>
+        </div>
+        <div class="about-feat">
+          <span class="about-feat-ico">📱</span>
+          <div class="about-feat-title">Mobile Ready</div>
+          <div class="about-feat-desc">Fully responsive design. Works on phone, tablet, and desktop browsers.</div>
+        </div>
+        <div class="about-feat">
+          <span class="about-feat-ico">🆓</span>
+          <div class="about-feat-title">Free Forever</div>
+          <div class="about-feat-desc">No subscriptions, no ads, no hidden costs. Built for every Indian farmer.</div>
+        </div>
+      </div>
+
+      <div class="about-tech-card">
+        <div class="about-tech-title">Technology Stack</div>
+        <div class="about-tech-list">
+          <div class="tech-item"><span class="tech-dot html"></span>HTML5</div>
+          <div class="tech-item"><span class="tech-dot css"></span>CSS3</div>
+          <div class="tech-item"><span class="tech-dot js"></span>JavaScript (ES6+)</div>
+          <div class="tech-item"><span class="tech-dot ls"></span>localStorage API</div>
+          <div class="tech-item"><span class="tech-dot xlsx"></span>SheetJS (XLSX)</div>
+          <div class="tech-item"><span class="tech-dot pwa"></span>Offline-First PWA</div>
+        </div>
+      </div>
+
+      <div class="about-footer-note">
+        Made with ❤️ for Indian Farmers · <strong>KisaanBook © 2025</strong>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOTTOM NAV (Mobile)
+══════════════════════════════════════ -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" data-page="dashboard">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </button>
+  <button class="bnav-btn" data-page="add-crop">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span>Add Crop</span>
+  </button>
+  <button class="bnav-btn" data-page="expenses">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    <span>Expenses</span>
+  </button>
+  <button class="bnav-btn" data-page="export">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span>Export</span>
+  </button>
+  <button class="bnav-btn" data-page="about">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span>About</span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════
+     TOAST
+══════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <p class="modal-msg" id="modalText">Are you sure?</p>
+    <div class="modal-btns">
+      <button class="btn-secondary" id="modalCancel">Cancel</button>
+      <button class="btn-danger" id="modalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
